@@ -5,6 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
+use bootloader::{BootInfo, entry_point};
 use pepper_os::println;
 
 #[cfg(not(test))]
@@ -20,8 +21,10 @@ fn panic(info: &PanicInfo) -> ! {
     pepper_os::test_panic_handler(info)
 }
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("Starting Pepper OS...");
 
     pepper_os::init();
