@@ -5,13 +5,13 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use pepper_os::{println};
+use pepper_os::println;
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    pepper_os::hlt_loop();
 }
 
 #[cfg(test)]
@@ -31,5 +31,5 @@ pub extern "C" fn _start() -> ! {
 
     println!("Successfully Loaded OS!");
 
-    loop {}
+    pepper_os::hlt_loop();
 }
