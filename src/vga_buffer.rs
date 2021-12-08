@@ -60,15 +60,6 @@ pub struct Writer {
 
 impl Writer {
 
-    pub fn new(color_code: ColorCode) -> Writer {
-        Writer {
-            column_position: 0,
-            row_position: 0,
-            color_code: color_code,
-            buffer: unsafe { &mut *(0xb8000 as *mut Buffer) }
-        }
-    }
-
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
@@ -91,10 +82,8 @@ impl Writer {
     }
 
     fn new_line(&mut self) {
-        if self.row_position < BUFFER_HEIGHT {
-            self.row_position += 1;
-            self.column_position = 0;
-        } 
+        self.row_position = (self.row_position + 1) % BUFFER_HEIGHT;
+        self.column_position = 0;
     }
 
     pub fn write_string(&mut self, s: &str) {
@@ -141,4 +130,28 @@ macro_rules! println {
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
+}
+
+#[test_case]
+fn test_println_simple() {
+    println!("test_println_simple output");
+}
+
+#[test_case]
+fn test_println_many() {
+    for _ in 0..200 {
+        println!("test_println_many output");
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    WRITER.lock().row_position = 0;
+    WRITER.lock().column_position = 0;
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[0][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
 }
