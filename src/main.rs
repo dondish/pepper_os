@@ -25,7 +25,7 @@ pub extern "C" fn _start() -> ! {
     println!("Starting Pepper OS...");
 
     pepper_os::init();
-    
+
     #[cfg(test)]
     test_main();
 

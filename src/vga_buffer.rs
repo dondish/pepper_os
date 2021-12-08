@@ -1,4 +1,4 @@
-use core::{fmt, hash::Hasher};
+use core::{fmt};
 
 use spin::Mutex;
 use volatile::Volatile;
