@@ -5,7 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use pepper_os::println;
+use pepper_os::{println};
 
 #[cfg(not(test))]
 #[panic_handler]
@@ -22,10 +22,14 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    println!("Starting Pepper OS");
+    println!("Starting Pepper OS...");
 
+    pepper_os::init();
+    
     #[cfg(test)]
     test_main();
-    
+
+    println!("Successfully Loaded OS!");
+
     loop {}
 }

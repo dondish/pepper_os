@@ -1,4 +1,4 @@
-use core::fmt;
+use core::{fmt, hash::Hasher};
 
 use spin::Mutex;
 use volatile::Volatile;
@@ -82,8 +82,28 @@ impl Writer {
     }
 
     fn new_line(&mut self) {
-        self.row_position = (self.row_position + 1) % BUFFER_HEIGHT;
+        if self.row_position == BUFFER_HEIGHT - 1 {
+            self.push_everything_one_row_upwards();
+            self.row_position -= 1;
+        } 
+        self.row_position += 1;
         self.column_position = 0;
+    }
+
+    fn push_everything_one_row_upwards(&mut self) {
+        for row in 1..BUFFER_HEIGHT {
+            for col in 0..BUFFER_WIDTH {
+                let value = self.buffer.chars[row][col].read();
+                self.buffer.chars[row-1][col].write(value);
+            }
+        }
+        for col in 0..BUFFER_WIDTH {
+            let blank = ScreenCharacter {
+                ascii_character: b' ',
+                color_code: self.color_code,
+            };
+            self.buffer.chars[BUFFER_HEIGHT-1][col].write(blank);
+        }
     }
 
     pub fn write_string(&mut self, s: &str) {
