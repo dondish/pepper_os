@@ -4,9 +4,12 @@
 #![test_runner(pepper_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+extern crate alloc;
+
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
-use pepper_os::{println, memory::active_level_4_table};
+use pepper_os::{println, memory::{self, BootInfoFrameAllocator}, allocator};
+use alloc::boxed::Box;
 use x86_64::VirtAddr;
 
 #[cfg(not(test))]
@@ -30,14 +33,15 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     pepper_os::init();
 
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let l4_table = unsafe { active_level_4_table(phys_mem_offset) };
+    let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { memory::init(physical_memory_offset) };
+    let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    for (i, entry) in l4_table.iter().enumerate() {
-        if !entry.is_unused() {
-            println!("L4 Entry {}: {:?}", i, entry);
-        }
-    }
+    allocator::init_heap(&mut mapper, &mut frame_allocator);
+
+    let heap_value = Box::new(41);
+    println!("heap_value at {:p} {}", heap_value, heap_value);
+
 
     #[cfg(test)]
     test_main();
